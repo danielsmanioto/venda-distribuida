@@ -14,6 +14,7 @@ Sistema de e-commerce distribuído com arquitetura de microserviços, implementa
 - [Padrões Arquiteturais](#-padrões-arquiteturais)
 - [Observabilidade](#-observabilidade)
 - [Como Executar](#-como-executar)
+  - [Desenvolvimento com VS Code](#-desenvolvimento-com-vs-code-igual-intelijj)
 - [Fluxos Principais](#-fluxos-principais)
 
 ---
@@ -456,6 +457,231 @@ curl http://localhost:8080/actuator/health  # usuarios-service
 curl http://localhost:8081/actuator/health  # produtos-service
 curl http://localhost:8082/actuator/health  # venda-service
 ```
+
+### 🎯 Desenvolvimento com VS Code (Igual IntelliJ)
+
+Você pode usar Visual Studio Code como IDE completa para desenvolvimento Java, com as mesmas funcionalidades do IntelliJ. Segue o guia:
+
+#### **1. Requisitos Prévios**
+
+- ✅ Java 25 instalado ([Download](https://www.oracle.com/java/technologies/downloads/#java25))
+- ✅ VS Code instalado
+- ✅ Node.js 18+ (para o frontend)
+
+#### **2. Instalação de Extensões (Obrigatório)**
+
+Abra VS Code e instale as seguintes extensões:
+
+| Extensão | ID | Funcionalidade |
+|----------|--|-|
+| **Extension Pack for Java** | `vscjava.vscode-java-pack` | Java, Debugging, Maven, Test Runner |
+| **Spring Boot Extension Pack** | `vmware.vscode-boot-dev-pack` | Spring Boot, Cloud, Dashboard |
+| **Maven for Java** | `vscjava.vscode-maven` | Build, Run, Test |
+
+**Via Terminal**:
+```bash
+code --install-extension vscjava.vscode-java-pack
+code --install-extension vmware.vscode-boot-dev-pack
+code --install-extension vscjava.vscode-maven
+```
+
+#### **3. Configuração Inicial**
+
+Crie o arquivo `.vscode/settings.json` na raiz do projeto:
+
+```json
+{
+  "java.jdt.ls.vmargs": "-XX:+UseStringDeduplication -XX:+UseG1GC -XX:+UseGCOverheadLimit -Xmx2G",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-25",
+      "path": "/path/to/java-25",
+      "default": true
+    }
+  ],
+  "java.import.maven.enabled": true,
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "spring-boot.fast-start": true
+}
+```
+
+**📌 No macOS**, o caminho do Java é geralmente:
+```
+/Users/seu-usuario/Documents/java/jdk-25.0.1.jdk/Contents/Home
+```
+
+#### **4. Executando os Serviços**
+
+**Método 1: Via Paleta de Comandos (Recomendado)**
+- Pressione `Cmd+Shift+P` → busque por `Java: Run`
+- Selecione `UsuariosServiceApplication` ou o serviço desejado
+- Clique em `Run`
+
+**Método 2: Via Spring Boot Dashboard**
+- Abra a aba de Explorador (`Cmd+Shift+E`)
+- Procure por **Spring Boot Dashboard**
+- Clique em ▶️ ao lado do serviço para iniciar
+
+**Método 3: Via Terminal Maven**
+```bash
+# Dentro da pasta do serviço (ex: usuarios/)
+mvn spring-boot:run
+
+# Ou diretamente do root com módulo específico
+mvn -pl usuarios spring-boot:run
+```
+
+**Método 4: Debug Mode (como no IntelliJ)**
+1. Abra arquivo `UsuariosServiceApplication.java`
+2. Clique no botão **Debug** acima do método `main`
+3. Escolha a configuração de debug
+4. Use `F10` para step over, `F11` para step into
+
+#### **5. Rodando os Testes**
+
+**Executar Testes Unitários**:
+```bash
+# Todos os testes
+mvn test
+
+# Testes de um serviço específico
+mvn -pl usuarios test
+
+# Teste específico
+mvn -pl usuarios test -Dtest=UsuarioServiceTest
+```
+
+**Ou via VS Code**:
+- Clique no botão **Test Explorer** na barra lateral
+- Procure pelo teste desejado
+- Clique em ▶️ para executar
+
+#### **6. Debugando como no IntelliJ**
+
+**Adicionar Breakpoint**:
+- Clique na linha desejada (margem esquerda)
+- Um ponto vermelho 🔴 aparecerá
+
+**Controles de Debug**:
+| Atalho | Ação |
+|--------|------|
+| `F10` | Step Over (próxima linha) |
+| `F11` | Step Into (entrar na função) |
+| `Shift+F11` | Step Out (sair da função) |
+| `F5` / `Cmd+Shift+D` | Continue (até próximo breakpoint) |
+| `Shift+F5` | Stop debug |
+
+**Inspecionar Variáveis**:
+- Quando em pausa (breakpoint), use a aba **Variables** na lateral esquerda
+- Passe o mouse sobre qualquer variável no código para preview
+
+#### **7. Spring Boot Dashboard**
+
+Funcionalidade exclusiva do VS Code com extensão Spring Boot:
+
+1. Abra a aba **Spring Boot Dashboard** (ícone de folha verde)
+2. Veja todos os serviços Spring Boot no projeto
+3. **Iniciar/Parar**: Clique em ▶️ ou ⏹️
+4. **Logs**: Clique em um serviço para ver logs em tempo real
+5. **Endpoints**: Veja todos os endpoints disponíveis
+6. **Actuator**: Acesse métricas de health em tempo real
+
+#### **8. Extensões Úteis Adicionais**
+
+```bash
+# Thêm mais produtividade ao desenvolvimento
+
+# Prettier - Code formatter
+code --install-extension esbenp.prettier-vscode
+
+# REST Client - Testar APIs
+code --install-extension humao.rest-client
+
+# GitLens - Integração com Git avançada
+code --install-extension eamodio.gitlens
+
+# Docker - Integração com containers
+code --install-extension ms-azuretools.vscode-docker
+```
+
+#### **9. Executando a Infraestrutura**
+
+```bash
+# Na raiz do projeto, inicie os containers da infraestrutura
+docker-compose up -d
+
+# Verifique se está rodando
+docker-compose ps
+
+# Ver logs de um serviço
+docker-compose logs -f postgres-usuarios
+
+# Parar infraestrutura
+docker-compose down
+```
+
+#### **10. Testando Endpoints**
+
+**Via REST Client Extension** (`humao.rest-client`):
+
+Crie arquivo `test.http` na raiz:
+```http
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com",
+  "senha": "123456"
+}
+
+### Listar Produtos
+GET http://localhost:8081/api/produtos
+Authorization: Bearer {{token}}
+
+### Criar Venda
+POST http://localhost:8083/api/vendas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "usuarioId": 1,
+  "produtoId": 1,
+  "quantidade": 2
+}
+```
+
+Depois clique em `Send Request` acima de cada requisição.
+
+#### **11. Troubleshooting**
+
+| Problema | Solução |
+|----------|---------|
+| "Java Runtime not found" | Confirme o caminho em `settings.json` com `java -version` no terminal |
+| "Maven not found" | Execute `mvn --version` para confirmar instalação |
+| "Port already in use" | Use `lsof -i :8080` para encontrar o processo e mate-o |
+| "Connection refused" | Certifique-se de que `docker-compose up -d` foi executado |
+| Debug não funciona | Limpe cache: `Cmd+Shift+P` → `Java: Clean Language Server Workspace` |
+
+#### **12. Comparação: VS Code vs IntelliJ**
+
+| Feature | VS Code | IntelliJ |
+|---------|---------|----------|
+| **Startup** | ⚡ Muito rápido | 🐢 Lento |
+| **RAM** | 💾 Leve (500MB) | 💾 Pesado (2GB+) |
+| **Debugging** | ✅ Completo | ✅ Completo |
+| **Refactoring** | ✅ Bom | ✅ Excelente |
+| **Autocomplete** | ✅ Muito bom | ✅ Perfeito |
+| **Spring Boot** | ✅ Dashboard visual | ✅ Integrado |
+| **Customização** | ✅ Extrema | ❌ Limitada |
+| **Preço** | 🆓 Grátis | 💰 Pago |
+| **Extensões** | ✅ Ecossistema grande | ❌ Built-in |
 
 ---
 
