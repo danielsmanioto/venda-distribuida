@@ -1,0 +1,335 @@
+version: '3.8'
+
+services:
+  # ========================================
+  # MICROSERVIÇOS
+  # ========================================
+  
+  usuarios-service:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/venda-distribuida-usuarios:latest
+    container_name: usuarios-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-usuarios:5432/usuarios
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-usuarios
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  produtos-write-service:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/venda-distribuida-produtos-write:latest
+    container_name: produtos-write-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-produtos-master:5432/produtos
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-produtos-master
+      - rabbitmq
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  produtos-read-service:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/venda-distribuida-produtos-read:latest
+    container_name: produtos-read-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-produtos-replica:5432/produtos
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-produtos-replica
+      - redis
+      - rabbitmq
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  vendas-service:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/venda-distribuida-vendas:latest
+    container_name: vendas-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-vendas:5432/vendas
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PRODUTOS_SERVICE_URL=http://produtos-read-service:8082
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres-vendas
+      - kafka
+      - produtos-read-service
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/venda-distribuida-frontend:latest
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - usuarios-service
+      - produtos-read-service
+      - vendas-service
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================
+  # BANCOS DE DADOS
+  # ========================================
+
+  postgres-usuarios:
+    image: postgres:15-alpine
+    container_name: postgres-usuarios
+    environment:
+      POSTGRES_DB: usuarios
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-usuarios-data:/var/lib/postgresql/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d usuarios"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-produtos-master:
+    image: postgres:15-alpine
+    container_name: postgres-produtos-master
+    environment:
+      POSTGRES_DB: produtos
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-produtos-master-data:/var/lib/postgresql/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d produtos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-produtos-replica:
+    image: postgres:15-alpine
+    container_name: postgres-produtos-replica
+    environment:
+      POSTGRES_DB: produtos
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-produtos-replica-data:/var/lib/postgresql/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d produtos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-vendas:
+    image: postgres:15-alpine
+    container_name: postgres-vendas
+    environment:
+      POSTGRES_DB: vendas
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-vendas-data:/var/lib/postgresql/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d vendas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # CACHE E MESSAGE BROKERS
+  # ========================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - venda-network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - venda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ========================================
+  # OBSERVABILIDADE
+  # ========================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - venda-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - venda-network
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    networks:
+      - venda-network
+    restart: unless-stopped
+
+networks:
+  venda-network:
+    driver: bridge
+
+volumes:
+  postgres-usuarios-data:
+  postgres-produtos-master-data:
+  postgres-produtos-replica-data:
+  postgres-vendas-data:
+  redis-data:
+  rabbitmq-data:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  prometheus-data:
+  grafana-data:
