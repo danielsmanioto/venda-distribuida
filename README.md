@@ -668,22 +668,21 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
+
+
+## 👥 Time
+
+- **Documentacao Arquitetura**: [Doc](https://github.com/danielsmanioto/software_architecture_challenges/blob/main/sistema-venda-distribuido)]
+---
+
+
+
 ## 👥 Time
 
 - **Tech Lead**: [Seu Nome]
 - **Backend**: [Time Backend]
 - **Frontend**: [Time Frontend]
 - **DevOps**: [Time DevOps]
-
----
-
-## 📞 Suporte
-
-- **Documentação**: https://docs.vendaonline.com
-- **Issues**: https://github.com/seu-usuario/venda-online/issues
-- **Slack**: #venda-online-dev
-- **Email**: dev@vendaonline.com
-
 ---
 
 <div align="center">
@@ -691,10 +690,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 **Feito com ❤️ pelo Time de Engenharia**
 
 [🔝 Voltar ao topo](#-sistema-de-venda-online)
-
-
-### Documentacao
-- https://github.com/danielsmanioto/software_architecture_challenges/blob/main/sistema-venda-distribuido
 
 
 </div>
