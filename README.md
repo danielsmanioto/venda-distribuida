@@ -36,7 +36,52 @@ Sistema de e-commerce desenvolvido com arquitetura de microserviços, preparado 
 
 O sistema utiliza uma arquitetura de microserviços com os seguintes componentes principais:
 
-<img width="1303" height="1022" alt="image" src="https://github.com/user-attachments/assets/7ec4cef0-e728-4cb2-a9f1-0cba11db359f" />
+```
+┌──────────┐
+│ Usuário  │
+└────┬─────┘
+     │
+┌────▼────────────┐
+│   MFE Front     │
+└────┬────────┬───┘
+     │        │
+┌────▼────┐   └───────────────┐
+│   DNS   │                   │
+│   CDN   │                   │
+└─────────┘                   │
+                              │
+                    ┌─────────▼─────────────────────────────────┐
+                    │         API Gateway                        │
+                    │  (Rate Limiting + Circuit Breaker)         │
+                    └─┬──────┬────────┬────────────┬────────────┘
+                      │      │        │            │
+           ┌──────────┘      │        └────────┐   └────────┐
+           │                 │                 │            │
+    ┌──────▼──────┐   ┌─────▼──────┐   ┌─────▼──────┐   ┌─▼─────────┐
+    │  Usuários   │   │  Produtos  │   │  Produtos  │   │   Venda   │
+    │  Service    │   │   Write    │   │    Read    │   │  Service  │
+    │   :8080     │   │  Service   │   │  Service   │   │   :8082   │
+    └──────┬──────┘   │   :8081    │   │   :8081    │   └─────┬─────┘
+           │          └─────┬──────┘   └─────┬──────┘         │
+           │                │                 │                │
+    ┌──────▼──────┐   ┌────▼──────┐    ┌────▼──────┐   ┌─────▼──────┐
+    │ PostgreSQL  │   │PostgreSQL │    │   Redis   │   │   Kafka    │
+    │  usuarios   │   │  Master   │    │  Cache    │   └─────┬──────┘
+    │   :5434     │   │   :5435   │    │  :6379    │         │
+    └─────────────┘   └─────┬─────┘    └───────────┘         │
+                            │                                 │
+                      ┌─────▼──────┐                    ┷─────▼──────┐
+                      │PostgreSQL  │                    │  Processa  │
+                      │  Replica   │                    │   Venda    │
+                      │   :5437    │                    │  Service   │
+                      └────────────┘                    │   :8082    │
+                                                        └─────┬──────┘
+                                                              │
+                                                       ┌──────▼──────┐
+                                                       │ PostgreSQL  │
+                                                       │   :5436     │
+                                                       └─────────────┘
+```
 
 ---
 
@@ -314,6 +359,35 @@ Rastreamento distribuído de requisições.
 - Identificação de gargalos
 - Análise de dependências
 - Debug de erros distribuídos
+
+---
+
+## 🌐 URLs de Acesso
+
+Após inicializar o sistema, os seguintes serviços estarão disponíveis:
+
+| Serviço | URL | Descrição |
+|---------|-----|-----------|
+| **Frontend** | http://localhost:3000 | Interface do usuário (MFE) |
+| **API Gateway** | http://localhost/api | Ponto de entrada principal da API |
+| **Swagger - Usuários** | http://localhost:8080/swagger-ui.html | Documentação API de usuários |
+| **Swagger - Produtos** | http://localhost:8081/swagger-ui.html | Documentação API de produtos |
+| **Swagger - Vendas** | http://localhost:8082/swagger-ui.html | Documentação API de vendas |
+| **Prometheus** | http://localhost:9090 | Métricas do sistema |
+| **Grafana** | http://localhost:3000 | Dashboards e visualizações |
+| **Jaeger** | http://localhost:16686 | Tracing distribuído |
+| **Loki** | http://localhost:3100 | Agregação de logs |
+| **RabbitMQ Management** | http://localhost:15672 | Console de gerenciamento RabbitMQ |
+| **Kafka UI** | http://localhost:8089 | Interface para visualizar tópicos Kafka |
+| **Redis Commander** | http://localhost:8081 | Interface web para Redis |
+
+### Credenciais Padrão
+
+| Serviço | Usuário | Senha |
+|---------|---------|-------|
+| **Grafana** | admin | admin |
+| **RabbitMQ** | guest | guest |
+| **PostgreSQL** | postgres | postgres |
 
 ---
 
