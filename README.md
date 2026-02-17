@@ -670,9 +670,9 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 
 
-## 👥 Time
+## 👥 Documentação
 
-- **Documentacao Arquitetura**: [Doc](https://github.com/danielsmanioto/software_architecture_challenges/blob/main/sistema-venda-distribuido)]
+- **Documentacao Arquitetura**: [Doc](https://github.com/danielsmanioto/software_architecture_challenges/blob/main/sistema-venda-distribuido)
 ---
 
 
