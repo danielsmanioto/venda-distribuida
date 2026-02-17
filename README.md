@@ -36,52 +36,7 @@ Sistema de e-commerce desenvolvido com arquitetura de microserviços, preparado 
 
 O sistema utiliza uma arquitetura de microserviços com os seguintes componentes principais:
 
-```
-┌──────────┐
-│ Usuário  │
-└────┬─────┘
-     │
-┌────▼────────────┐
-│   MFE Front     │
-└────┬────────┬───┘
-     │        │
-┌────▼────┐   └───────────────┐
-│   DNS   │                   │
-│   CDN   │                   │
-└─────────┘                   │
-                              │
-                    ┌─────────▼─────────────────────────────────┐
-                    │         API Gateway                        │
-                    │  (Rate Limiting + Circuit Breaker)         │
-                    └─┬──────┬────────┬────────────┬────────────┘
-                      │      │        │            │
-           ┌──────────┘      │        └────────┐   └────────┐
-           │                 │                 │            │
-    ┌──────▼──────┐   ┌─────▼──────┐   ┌─────▼──────┐   ┌─▼─────────┐
-    │  Usuários   │   │  Produtos  │   │  Produtos  │   │   Venda   │
-    │  Service    │   │   Write    │   │    Read    │   │  Service  │
-    │   :8080     │   │  Service   │   │  Service   │   │   :8082   │
-    └──────┬──────┘   │   :8081    │   │   :8081    │   └─────┬─────┘
-           │          └─────┬──────┘   └─────┬──────┘         │
-           │                │                 │                │
-    ┌──────▼──────┐   ┌────▼──────┐    ┌────▼──────┐   ┌─────▼──────┐
-    │ PostgreSQL  │   │PostgreSQL │    │   Redis   │   │   Kafka    │
-    │  usuarios   │   │  Master   │    │  Cache    │   └─────┬──────┘
-    │   :5434     │   │   :5435   │    │  :6379    │         │
-    └─────────────┘   └─────┬─────┘    └───────────┘         │
-                            │                                 │
-                      ┌─────▼──────┐                    ┷─────▼──────┐
-                      │PostgreSQL  │                    │  Processa  │
-                      │  Replica   │                    │   Venda    │
-                      │   :5437    │                    │  Service   │
-                      └────────────┘                    │   :8082    │
-                                                        └─────┬──────┘
-                                                              │
-                                                       ┌──────▼──────┐
-                                                       │ PostgreSQL  │
-                                                       │   :5436     │
-                                                       └─────────────┘
-```
+<img width="1303" height="1022" alt="image" src="https://github.com/user-attachments/assets/7ec4cef0-e728-4cb2-a9f1-0cba11db359f" />
 
 ---
 
