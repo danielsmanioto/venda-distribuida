@@ -1,4 +1,4 @@
-# 🛒 Sistema de Venda Online
+# 🛒 Sistema de Venda Distribuída
 
 Sistema de e-commerce distribuído com arquitetura de microserviços, implementando padrões modernos de escalabilidade, resiliência e observabilidade.
 
@@ -8,8 +8,8 @@ Sistema de e-commerce distribuído com arquitetura de microserviços, implementa
 
 - [Visão Geral](#-visão-geral)
 - [Arquitetura](#-arquitetura)
+- [Microserviços Implementados](#-microserviços-implementados)
 - [Requisitos do Sistema](#-requisitos-do-sistema)
-- [Microserviços](#-microserviços)
 - [Infraestrutura](#-infraestrutura)
 - [Padrões Arquiteturais](#-padrões-arquiteturais)
 - [Observabilidade](#-observabilidade)

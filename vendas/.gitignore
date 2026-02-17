@@ -1,0 +1,38 @@
+# Ignora arquivos do Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Ignora arquivos do IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Ignora arquivos do Eclipse
+.classpath
+.project
+.settings/
+
+# Ignora arquivos do VS Code
+.vscode/
+
+# Ignora arquivos de log
+*.log
+logs/
+
+# Ignora arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Ignora variáveis de ambiente
+.env
+.env.local
+.env.*.local
