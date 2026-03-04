@@ -32,6 +32,11 @@ public class Produto {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 
+    @Column(name = "quantidade_estoque", nullable = false)
+    @Builder.Default
+    private Integer quantidadeEstoque = 0;
+
+    // Mantido para compatibilidade (alias para quantidadeEstoque)
     @Column(nullable = false)
     @Builder.Default
     private Integer estoque = 0;

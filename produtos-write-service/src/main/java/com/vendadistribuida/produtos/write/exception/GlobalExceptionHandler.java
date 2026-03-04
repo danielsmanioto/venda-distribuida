@@ -16,6 +16,24 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ProdutoNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleProdutoNotFoundException(ProdutoNotFoundException ex) {
+        log.error("Produto não encontrado: ", ex);
+        Map<String, String> error = new HashMap<>();
+        error.put("erro", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(EstoqueInsuficienteException.class)
+    public ResponseEntity<Map<String, Object>> handleEstoqueInsuficienteException(EstoqueInsuficienteException ex) {
+        log.error("Estoque insuficiente: ", ex);
+        Map<String, Object> error = new HashMap<>();
+        error.put("erro", ex.getMessage());
+        error.put("saldoAtual", ex.getSaldoAtual());
+        error.put("quantidadeSolicitada", ex.getQuantidadeSolicitada());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception: ", ex);
