@@ -761,6 +761,6 @@ open http://localhost:3000
 
 - [README.md](README.md) - Visão geral do projeto
 - [USUARIOS-CURL.md](USUARIOS-CURL.md) - Exemplos de API de usuários
-- [PRODUTOS-CURL.md](PRODUTOS-CURL.md) - Exemplos de API de produtos
-- [VENDAS-CURL.md](VENDAS-CURL.md) - Exemplos de API de vendas
+- [PRODUTOS-CURL.md](../apis/PRODUTOS-CURL.md) - Exemplos de API de produtos
+- [VENDAS-CURL.md](../apis/VENDAS-CURL.md) - Exemplos de API de vendas
 

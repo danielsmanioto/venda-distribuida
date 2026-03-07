@@ -621,7 +621,7 @@ aws configure get region
 
 ## 📚 Documentação Relacionada
 
-- [INFRAESTRUTURA.md](INFRAESTRUTURA.md) - Guia de acesso aos bancos/serviços
+- [INFRAESTRUTURA.md](../guias/INFRAESTRUTURA.md) - Guia de acesso aos bancos/serviços
 - [README.md](README.md) - Visão geral do projeto
 - [AWS Toolkit Docs](https://docs.aws.amazon.com/toolkit-for-vscode/)
 - [GitHub Copilot Docs](https://github.com/features/copilot)
