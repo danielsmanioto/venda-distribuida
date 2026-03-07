@@ -1,21 +1,31 @@
-# 🛒 Sistema de Venda Distribuída
+# 🛒 Venda Distribuída
 
-Sistema de e-commerce distribuído com arquitetura de microserviços, implementando padrões modernos de escalabilidade, resiliência e observabilidade.
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0EA5E9,100:7C3AED&height=220&section=header&text=Venda%20Distribu%C3%ADda&fontColor=ffffff&fontSize=52&fontAlignY=38&desc=Microservi%C3%A7os%20com%20CQRS%20+%20Event-Driven%20+%20Observabilidade&descAlignY=60" alt="Venda Distribuída" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-25-111827?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 25" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.4.13-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/React-18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+</p>
+
+Sistema de e-commerce distribuído com foco em **resiliência**, **escala** e **observabilidade**.
 
 ---
 
-## 📋 Índice
+## 📌 Índice
 
-- [Visão Geral](#-visão-geral)
-- [Arquitetura](#-arquitetura)
-- [Microserviços Implementados](#-microserviços-implementados)
-- [Requisitos do Sistema](#-requisitos-do-sistema)
-- [Infraestrutura](#-infraestrutura)
-- [Padrões Arquiteturais](#-padrões-arquiteturais)
-- [Observabilidade](#-observabilidade)
-- [Como Executar](#-como-executar)
-  - [Desenvolvimento com VS Code](#-desenvolvimento-com-vs-code-igual-intelijj)
-- [Fluxos Principais](#-fluxos-principais)
+- [🎯 Visão Geral](#-visão-geral)
+- [🏗️ Arquitetura](#️-arquitetura)
+- [📊 Requisitos do Sistema](#-requisitos-do-sistema)
+- [🔧 Microserviços](#-microserviços)
+- [🗄️ Infraestrutura](#️-infraestrutura)
+- [🎨 Padrões Arquiteturais](#-padrões-arquiteturais)
+- [📈 Observabilidade](#-observabilidade)
+- [🚀 Como Executar](#-como-executar)
+- [🌐 URLs de Acesso](#-urls-de-acesso)
 
 ---
 
