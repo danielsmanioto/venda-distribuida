@@ -9,8 +9,9 @@ import com.vendadistribuida.usuarios.repository.UsuarioRepository;
 import com.vendadistribuida.usuarios.security.JwtTokenProvider;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,15 +25,26 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class UsuarioService {
+
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+
+    @Autowired
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          PasswordEncoder passwordEncoder,
+                          AuthenticationManager authenticationManager,
+                          JwtTokenProvider tokenProvider) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+    }
 
     @Transactional
     @CircuitBreaker(name = "usuarios", fallbackMethod = "registrarFallback")
@@ -64,6 +76,38 @@ public class UsuarioService {
         log.info("Usuário registrado com sucesso: ID {}", salvo.getId());
 
         return mapToResponse(salvo);
+    }
+
+    // Compatibility method for older tests: criar using UsuarioRequest
+    public UsuarioResponse criar(com.vendadistribuida.usuarios.domain.dto.UsuarioRequest request) {
+        RegistroRequest reg = new RegistroRequest();
+        reg.setEmail(request.getEmail());
+        reg.setSenha(request.getSenha());
+        reg.setNome(request.getNome());
+        if (usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email já cadastrado");
+        }
+
+        if (request.getRole() != null) {
+            java.util.Set<String> roles = new java.util.HashSet<>();
+            roles.add(request.getRole().name());
+            Usuario usuario = Usuario.builder()
+                    .email(reg.getEmail())
+                    .senha(passwordEncoder.encode(reg.getSenha()))
+                    .nome(reg.getNome())
+                    .roles(roles)
+                    .ativo(true)
+                    .build();
+
+            Usuario salvo = usuarioRepository.save(usuario);
+            return mapToResponse(salvo);
+        }
+
+        return registrar(reg);
+    }
+
+    public java.util.List<UsuarioResponse> listar() {
+        return listarTodos();
     }
 
     @CircuitBreaker(name = "usuarios", fallbackMethod = "loginFallback")
@@ -133,6 +177,15 @@ public class UsuarioService {
         log.info("Usuário atualizado com sucesso: ID {}", id);
 
         return mapToResponse(atualizado);
+    }
+
+    // Compatibility overload for tests that use UsuarioRequest
+    public UsuarioResponse atualizar(Long id, com.vendadistribuida.usuarios.domain.dto.UsuarioRequest request) {
+        RegistroRequest reg = new RegistroRequest();
+        reg.setEmail(request.getEmail());
+        reg.setNome(request.getNome());
+        reg.setSenha(request.getSenha());
+        return atualizar(id, reg);
     }
 
     @Transactional

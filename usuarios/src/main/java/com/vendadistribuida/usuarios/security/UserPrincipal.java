@@ -1,8 +1,7 @@
 package com.vendadistribuida.usuarios.security;
 
 import com.vendadistribuida.usuarios.domain.entity.Usuario;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.util.Objects;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,8 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Data
-@AllArgsConstructor
 public class UserPrincipal implements UserDetails {
 
     private Long id;
@@ -34,6 +31,15 @@ public class UserPrincipal implements UserDetails {
                 usuario.getAtivo(),
                 authorities
         );
+    }
+
+    public UserPrincipal(Long id, String email, String senha, String nome, Boolean ativo, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.email = email;
+        this.senha = senha;
+        this.nome = nome;
+        this.ativo = ativo;
+        this.authorities = authorities;
     }
 
     @Override

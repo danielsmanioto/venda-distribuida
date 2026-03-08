@@ -19,7 +19,7 @@
     <description>Serviço de autenticação e gerenciamento de usuários</description>
     
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
     
@@ -106,12 +106,7 @@
             <artifactId>zipkin-reporter-brave</artifactId>
         </dependency>
         
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <!-- Lombok removed: replaced generated code with explicit implementations -->
         
         <!-- Test -->
         <dependency>
@@ -140,6 +135,7 @@
     
     <build>
         <plugins>
+            <!-- Using default compiler plugin configuration -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -150,6 +146,15 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <!-- Configure Surefire to set Byte Buddy experimental flag for Java 25 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
         </plugins>
