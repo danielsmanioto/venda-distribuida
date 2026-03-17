@@ -927,5 +927,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 [🔝 Voltar ao topo](#-sistema-de-venda-online)
 
-
 </div>
