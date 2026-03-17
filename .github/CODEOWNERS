@@ -1,0 +1,14 @@
+# Code owners - review obrigatório
+# Garanta branch protection com:
+# - Require pull request reviews before merging
+# - Require review from Code Owners
+
+* @danielsmanioto
+
+# Owners por domínio (ajuste conforme seu time)
+/usuarios/ @danielsmanioto
+/produtos-write-service/ @danielsmanioto
+/produtos-read-service/ @danielsmanioto
+/vendas/ @danielsmanioto
+/frontend/ @danielsmanioto
+/.github/workflows/ @danielsmanioto

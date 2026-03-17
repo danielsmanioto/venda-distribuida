@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <!--
+    Adicione suppressions somente após análise manual da vulnerabilidade.
+    Exemplo de estrutura (descomentada quando necessário):
+
+    <suppress>
+      <notes><![CDATA[
+      Falso positivo confirmado em ambiente interno sem exposição externa.
+      ]]></notes>
+      <gav regex="true">^com\.example:artifact:.*$</gav>
+      <cve>CVE-2024-12345</cve>
+    </suppress>
+  -->
+</suppressions>

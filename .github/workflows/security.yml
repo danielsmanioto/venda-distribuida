@@ -1,78 +1,157 @@
-name: Security Scan
+name: Security & SAST
 
 on:
   schedule:
-    # Roda todos os dias às 2h da manhã
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'   # diário às 02h
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 
 jobs:
-  dependency-check:
-    name: Dependency Security Check
+
+  # ═══════════════════════════════════════════════════════════════
+  # SAST – CodeQL (Java + JavaScript)
+  # Resultados aparecem na aba Security → Code scanning do repo
+  # ═══════════════════════════════════════════════════════════════
+
+  codeql-java:
+    name: "🛡️ SAST CodeQL · ${{ matrix.service }}"
     runs-on: ubuntu-latest
-    
     strategy:
+      fail-fast: false
       matrix:
-        service: [usuarios, produtos-write-service, produtos-read-service, vendas]
-    
+        include:
+          - service: usuarios
+            java: "21"
+          - service: produtos-write-service
+            java: "25"
+          - service: produtos-read-service
+            java: "25"
+          - service: vendas
+            java: "25"
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up JDK 25
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          queries: security-extended,security-and-quality
+
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'temurin'
-      
-      - name: Run OWASP Dependency Check
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build for CodeQL
+        working-directory: ./${{ matrix.service }}
+        run: mvn compile -q
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java-kotlin/${{ matrix.service }}"
+
+  codeql-frontend:
+    name: "🛡️ SAST CodeQL · frontend"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript/frontend"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Dependency Scan – OWASP Dependency-Check
+  # Falha se CVSS ≥ 7 (High / Critical)
+  # ═══════════════════════════════════════════════════════════════
+
+  dependency-check:
+    name: "🔎 Dependency Scan · ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [usuarios, produtos-write-service, produtos-read-service, vendas]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: OWASP Dependency-Check (CVSS ≥ 7 = fail)
         working-directory: ./${{ matrix.service }}
         run: |
-          mvn org.owasp:dependency-check-maven:check
-      
-      - name: Upload results
-        uses: github/codeql-action/upload-sarif@v2
+          mvn org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -DsuppressionFile=../owasp-suppressions.xml
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: ./${{ matrix.service }}/target/dependency-check-report.sarif
 
+  # ═══════════════════════════════════════════════════════════════
+  # Container Scan – Trivy (imagens já publicadas no GHCR)
+  # ═══════════════════════════════════════════════════════════════
+
   trivy-scan:
-    name: Container Security Scan
+    name: "🐳 Container Scan · ${{ matrix.image }}"
     runs-on: ubuntu-latest
-    
+    if: github.event_name != 'pull_request'
     strategy:
+      fail-fast: false
       matrix:
-        image: 
-          - usuarios
-          - produtos-write
-          - produtos-read
-          - vendas
-          - frontend
-    
+        image: [usuarios, produtos-write, produtos-read, vendas, frontend]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/venda-distribuida-${{ matrix.image }}:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+          image-ref: "ghcr.io/${{ github.repository_owner }}/venda-distribuida-${{ matrix.image }}:latest"
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
+
+  # ═══════════════════════════════════════════════════════════════
+  # Secret Scanning – Gitleaks
+  # ═══════════════════════════════════════════════════════════════
 
   secret-scan:
-    name: Secret Scanning
+    name: "🔑 Secret Scanning"
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
