@@ -33,7 +33,7 @@ Guia completo para executar todos os serviços do sistema de venda distribuída.
 
 ### ✅ Frontend
 
-- **frontend** - Porta 3000
+- **frontend** - Porta 5173
   - React + Vite
   - Login de usuários
   - Listagem de produtos
@@ -94,7 +94,7 @@ docker-compose ps
 - Kafka: localhost:9092
 - Zookeeper: localhost:2181
 - Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (admin/admin)
+- Grafana: http://localhost:3000 (admin/admin123)
 - Jaeger: http://localhost:16686
 
 ### 4️⃣ Executar Microserviços (Backend)
@@ -139,7 +139,7 @@ cd frontend
 npm install
 npm run dev
 ```
-✅ Disponível em: http://localhost:3000
+✅ Disponível em: http://localhost:5173
 
 ---
 
@@ -194,7 +194,7 @@ curl -X POST http://localhost:8081/api/produtos \
 curl http://localhost:8082/api/produtos
 
 # Via Frontend
-# Acesse http://localhost:3000
+# Acesse http://localhost:5173
 # Faça login
 # Produtos aparecerão automaticamente
 ```
@@ -289,7 +289,7 @@ GET produtos::1
 
 ### Frontend (Usuário Final)
 
-1. **Acesse** http://localhost:3000
+1. **Acesse** http://localhost:5173
 2. **Login** com credenciais criadas
 3. **Visualize** catálogo de produtos
 4. Produtos são carregados do **produtos-read-service** (cache Redis)
@@ -404,7 +404,7 @@ venda-distribuida/
 ├── produtos-write-service/      # CQRS Write (8081)
 ├── produtos-read-service/       # CQRS Read (8082)
 ├── vendas/                      # Serviço de vendas (8083)
-├── frontend/                    # React Frontend (3000)
+├── frontend/                    # React Frontend (5173)
 ├── docker-compose.yml           # Infraestrutura
 ├── README.md                    # Documentação principal
 ├── PRODUTOS-README.md           # Documentação CQRS
@@ -449,7 +449,7 @@ venda-distribuida/
    - Por último, suba o frontend
 
 2. **CORS**:
-   - Todos os backends têm CORS habilitado para `http://localhost:3000`
+  - Todos os backends têm CORS habilitado para `http://localhost:5173`
    - Em produção, configure CORS adequadamente
 
 3. **Segurança**:

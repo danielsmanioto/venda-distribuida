@@ -25,6 +25,7 @@ Sistema de e-commerce distribuído com foco em **resiliência**, **escala** e **
 - [🎨 Padrões Arquiteturais](#-padrões-arquiteturais)
 - [📈 Observabilidade](#-observabilidade)
 - [🚀 Como Executar](#-como-executar)
+- [🛠️ Troubleshooting Local](#️-troubleshooting-local)
 - [🌐 URLs de Acesso](#-urls-de-acesso)
 
 ---
@@ -379,37 +380,130 @@ Após inicializar o sistema, os seguintes serviços estarão disponíveis:
 
 | Serviço | URL | Descrição |
 |---------|-----|-----------|
-| **Frontend** | http://localhost:3000 | Interface do usuário (MFE) |
+| **Frontend (dev / Vite)** | http://localhost:5173 | Interface do usuário (MFE) |
 | **API Gateway** | http://localhost/api | Ponto de entrada principal da API |
 | **Swagger - Usuários** | http://localhost:8080/swagger-ui.html | Documentação API de usuários |
 | **Swagger - Produtos** | http://localhost:8081/swagger-ui.html | Documentação API de produtos |
-| **Swagger - Vendas** | http://localhost:8082/swagger-ui.html | Documentação API de vendas |
+| **Swagger - Vendas** | http://localhost:8083/swagger-ui.html | Documentação API de vendas |
 | **Prometheus** | http://localhost:9090 | Métricas do sistema |
 | **Grafana** | http://localhost:3000 | Dashboards e visualizações |
 | **Jaeger** | http://localhost:16686 | Tracing distribuído |
 | **Loki** | http://localhost:3100 | Agregação de logs |
 | **RabbitMQ Management** | http://localhost:15672 | Console de gerenciamento RabbitMQ |
 | **Kafka UI** | http://localhost:8089 | Interface para visualizar tópicos Kafka |
-| **Redis Commander** | http://localhost:8081 | Interface web para Redis |
 
 ### Credenciais Padrão
 
 | Serviço | Usuário | Senha |
 |---------|---------|-------|
-| **Grafana** | admin | admin |
-| **RabbitMQ** | guest | guest |
-| **PostgreSQL** | postgres | postgres |
+| **Grafana** | admin | admin123 |
+| **RabbitMQ** | admin | admin123 |
+| **PostgreSQL (todos os bancos)** | admin | admin123 |
+| **Redis** | - | redis123 |
+
+Para a lista consolidada de acessos e credenciais locais, consulte [docs/guias/ACESSOS.md](docs/guias/ACESSOS.md).
 
 ---
 
 ## 🚀 Como Executar
+
+### ⚡ Início Rápido Local (recomendado)
+
+Se você quer subir o projeto local em poucos minutos, use os scripts da raiz:
+
+```bash
+# 1) Na raiz do projeto
+cd /Users/danielsmanioto/Documents/projects/projets_senior/venda-distribuida
+
+# 2) Dar permissão de execução (somente na primeira vez)
+chmod +x start-all.sh stop-all.sh deploy.sh
+
+# 3) Subir infraestrutura local (Docker)
+./start-all.sh
+```
+
+Depois disso, inicie os serviços de aplicação em terminais separados (como o script orienta):
+
+```bash
+# Terminal 1
+cd usuarios && mvn spring-boot:run
+
+# Terminal 2
+cd produtos-write-service && mvn spring-boot:run
+
+# Terminal 3
+cd produtos-read-service && mvn spring-boot:run
+
+# Terminal 4
+cd vendas && mvn spring-boot:run
+
+# Terminal 5
+cd frontend && npm install && npm run dev
+```
+
+Para parar a infraestrutura:
+
+```bash
+./stop-all.sh
+```
+
+Observações:
+- `start-all.sh`: sobe Docker Compose e valida infraestrutura.
+- `stop-all.sh`: derruba os containers.
+- `deploy.sh`: fluxo de deploy para ambiente de produção com `docker-compose.prod.yml` (não é o caminho padrão para desenvolvimento local).
+- Para passo a passo completo e testes via cURL, veja [docs/guias/GUIA-EXECUCAO.md](docs/guias/GUIA-EXECUCAO.md).
 
 ### Pré-requisitos
 
 - Docker 20.10+
 - Docker Compose 2.0+
 - 8GB RAM disponível
-- Portas disponíveis: 8080-8085, 5434-5437, 6379, 9090, 3000, 3100, 16686
+- Portas disponíveis: 5173, 8080-8085, 5434-5437, 6379, 9090, 3000, 3100, 16686
+
+---
+
+## 🛠️ Troubleshooting Local
+
+### 1) Frontend abre o Grafana em vez da aplicação
+
+Isso acontece por conflito de porta (`3000`).
+
+- Frontend (Vite) deste projeto: `http://localhost:5173`
+- Grafana: `http://localhost:3000`
+
+Se o frontend não subir em `5173`, confira a saída do terminal do `npm run dev` e abra a URL `Local:` exibida.
+
+### 2) Porta já em uso
+
+No macOS, para identificar processo em uma porta:
+
+```bash
+lsof -i :5173
+lsof -i :3000
+lsof -i :8080
+```
+
+Se necessário, encerre o processo e suba novamente o serviço.
+
+### 3) Containers não iniciam corretamente
+
+```bash
+docker-compose ps
+docker-compose logs --tail=100
+```
+
+Se quiser limpar tudo e subir do zero:
+
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+### 4) Roteiro recomendado para evolução em observabilidade
+
+Para praticar métricas, logs, traces e montar investigação ponta a ponta, siga:
+
+- [docs/guias/OBSERVABILIDADE.md](docs/guias/OBSERVABILIDADE.md)
 
 ### Inicialização Completa
 
@@ -430,7 +524,7 @@ docker-compose exec produtos-db psql -U postgres -f /init/schema.sql
 docker-compose exec vendas-db psql -U postgres -f /init/schema.sql
 
 # Acesse o sistema
-# Frontend: http://localhost:3000
+# Frontend: http://localhost:5173
 # API Gateway: http://localhost/api
 # Grafana: http://localhost:3000
 # Prometheus: http://localhost:9090
