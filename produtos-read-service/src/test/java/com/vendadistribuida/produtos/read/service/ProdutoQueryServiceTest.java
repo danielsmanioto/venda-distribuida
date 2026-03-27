@@ -9,6 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -28,6 +32,7 @@ class ProdutoQueryServiceTest {
     private ProdutoQueryService produtoQueryService;
 
     private Produto produto;
+    private Pageable pageable;
 
     @BeforeEach
     void setUp() {
@@ -40,12 +45,13 @@ class ProdutoQueryServiceTest {
         produto.setCategoria("Eletrônicos");
         produto.setSku("DELL-001");
         produto.setAtivo(true);
+        pageable = PageRequest.of(0, 10);
     }
 
     @Test
     void deveBuscarProdutoPorIdComSucesso() {
         // Arrange
-        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
+        when(produtoRepository.findByIdAndAtivoTrue(1L)).thenReturn(Optional.of(produto));
 
         // Act
         ProdutoResponse response = produtoQueryService.buscarPorId(1L);
@@ -54,13 +60,13 @@ class ProdutoQueryServiceTest {
         assertNotNull(response);
         assertEquals(1L, response.getId());
         assertEquals("Notebook Dell", response.getNome());
-        verify(produtoRepository, times(1)).findById(1L);
+        verify(produtoRepository, times(1)).findByIdAndAtivoTrue(1L);
     }
 
     @Test
     void deveLancarExcecaoQuandoProdutoNaoEncontrado() {
         // Arrange
-        when(produtoRepository.findById(1L)).thenReturn(Optional.empty());
+        when(produtoRepository.findByIdAndAtivoTrue(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -68,7 +74,7 @@ class ProdutoQueryServiceTest {
         });
 
         assertTrue(exception.getMessage().contains("Produto não encontrado"));
-        verify(produtoRepository, times(1)).findById(1L);
+        verify(produtoRepository, times(1)).findByIdAndAtivoTrue(1L);
     }
 
     @Test
@@ -79,7 +85,7 @@ class ProdutoQueryServiceTest {
         produto2.setNome("Mouse Logitech");
         produto2.setAtivo(true);
 
-        when(produtoRepository.findAll()).thenReturn(Arrays.asList(produto, produto2));
+        when(produtoRepository.findByAtivoTrue()).thenReturn(Arrays.asList(produto, produto2));
 
         // Act
         List<ProdutoResponse> responses = produtoQueryService.listarTodos();
@@ -89,29 +95,30 @@ class ProdutoQueryServiceTest {
         assertEquals(2, responses.size());
         assertEquals("Notebook Dell", responses.get(0).getNome());
         assertEquals("Mouse Logitech", responses.get(1).getNome());
-        verify(produtoRepository, times(1)).findAll();
+        verify(produtoRepository, times(1)).findByAtivoTrue();
     }
 
     @Test
     void deveBuscarPorCategoria() {
         // Arrange
-        when(produtoRepository.findByCategoriaAndAtivoTrue("Eletrônicos"))
-                .thenReturn(Arrays.asList(produto));
+        Page<Produto> page = new PageImpl<>(List.of(produto), pageable, 1);
+        when(produtoRepository.findByCategoriaAndAtivoTrue("Eletrônicos", pageable))
+            .thenReturn(page);
 
         // Act
-        List<ProdutoResponse> responses = produtoQueryService.buscarPorCategoria("Eletrônicos");
+        Page<ProdutoResponse> responses = produtoQueryService.buscarPorCategoria("Eletrônicos", pageable);
 
         // Assert
         assertNotNull(responses);
-        assertEquals(1, responses.size());
-        assertEquals("Eletrônicos", responses.get(0).getCategoria());
-        verify(produtoRepository, times(1)).findByCategoriaAndAtivoTrue("Eletrônicos");
+        assertEquals(1, responses.getTotalElements());
+        assertEquals("Eletrônicos", responses.getContent().get(0).getCategoria());
+        verify(produtoRepository, times(1)).findByCategoriaAndAtivoTrue("Eletrônicos", pageable);
     }
 
     @Test
     void deveBuscarPorSku() {
         // Arrange
-        when(produtoRepository.findBySkuAndAtivoTrue("DELL-001"))
+        when(produtoRepository.findBySku("DELL-001"))
                 .thenReturn(Optional.of(produto));
 
         // Act
@@ -120,22 +127,23 @@ class ProdutoQueryServiceTest {
         // Assert
         assertNotNull(response);
         assertEquals("DELL-001", response.getSku());
-        verify(produtoRepository, times(1)).findBySkuAndAtivoTrue("DELL-001");
+        verify(produtoRepository, times(1)).findBySku("DELL-001");
     }
 
     @Test
     void deveBuscarPorTermo() {
         // Arrange
-        when(produtoRepository.findByNomeContainingIgnoreCaseAndAtivoTrue("dell"))
-                .thenReturn(Arrays.asList(produto));
+        Page<Produto> page = new PageImpl<>(List.of(produto), pageable, 1);
+        when(produtoRepository.buscarPorTermo("dell", pageable))
+            .thenReturn(page);
 
         // Act
-        List<ProdutoResponse> responses = produtoQueryService.buscar("dell");
+        Page<ProdutoResponse> responses = produtoQueryService.buscar("dell", pageable);
 
         // Assert
         assertNotNull(responses);
-        assertEquals(1, responses.size());
-        assertTrue(responses.get(0).getNome().toLowerCase().contains("dell"));
-        verify(produtoRepository, times(1)).findByNomeContainingIgnoreCaseAndAtivoTrue("dell");
+        assertEquals(1, responses.getTotalElements());
+        assertTrue(responses.getContent().get(0).getNome().toLowerCase().contains("dell"));
+        verify(produtoRepository, times(1)).buscarPorTermo("dell", pageable);
     }
 }
