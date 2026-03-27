@@ -75,8 +75,8 @@ cd /Users/danielsmanioto/Documents/projects/projets_senior/venda-distribuida
 ### 3️⃣ Subir Infraestrutura
 
 ```bash
-# Subir todos os containers de infraestrutura
-docker-compose up -d
+# Recomendado: usar script da raiz (sobe infra e valida serviços)
+./start-all.sh
 
 # Verificar se todos os containers estão rodando
 docker-compose ps
@@ -84,7 +84,14 @@ docker-compose ps
 # Aguardar ~30 segundos para inicialização completa
 ```
 
+Alternativa (manual):
+
+```bash
+docker-compose up -d
+```
+
 **Serviços disponíveis:**
+- Frontend (após `npm run dev`): http://localhost:5173
 - PostgreSQL usuarios: localhost:5434
 - PostgreSQL produtos-master: localhost:5435
 - PostgreSQL produtos-replica: localhost:5437
@@ -102,7 +109,6 @@ docker-compose ps
 #### Terminal 1 - usuarios-service
 ```bash
 cd usuarios
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8080
@@ -110,7 +116,6 @@ mvn spring-boot:run
 #### Terminal 2 - produtos-write-service
 ```bash
 cd produtos-write-service
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8081
@@ -118,7 +123,6 @@ mvn spring-boot:run
 #### Terminal 3 - produtos-read-service
 ```bash
 cd produtos-read-service
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8082
@@ -126,10 +130,11 @@ mvn spring-boot:run
 #### Terminal 4 - vendas-service
 ```bash
 cd vendas
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8083
+
+> Opcional (quando quiser validar build): `mvn clean install -DskipTests`
 
 ### 5️⃣ Executar Frontend
 
@@ -327,12 +332,24 @@ GET produtos::1
 # Parar microserviços
 # Ctrl+C em cada terminal
 
-# Parar infraestrutura
+# Recomendado: usar script da raiz
+./stop-all.sh
+
+# Alternativa manual
 docker-compose down
 
 # Parar e remover volumes (CUIDADO: apaga dados)
 docker-compose down -v
 ```
+
+## 🚚 Deploy (produção)
+
+```bash
+# Script de deploy com docker-compose.prod.yml
+./deploy.sh
+```
+
+> Observação: `deploy.sh` é para ambiente de produção/homologação. Para desenvolvimento local, use `./start-all.sh` e `./stop-all.sh`.
 
 ---
 
@@ -406,9 +423,12 @@ venda-distribuida/
 ├── vendas/                      # Serviço de vendas (8083)
 ├── frontend/                    # React Frontend (5173)
 ├── docker-compose.yml           # Infraestrutura
+├── start-all.sh                 # Sobe infraestrutura local
+├── stop-all.sh                  # Para infraestrutura local
+├── deploy.sh                    # Deploy de produção
 ├── README.md                    # Documentação principal
 ├── PRODUTOS-README.md           # Documentação CQRS
-└── GUIA-EXECUCAO.md            # Este arquivo
+└── docs/guias/GUIA-EXECUCAO.md  # Este arquivo
 ```
 
 ---
@@ -443,7 +463,7 @@ venda-distribuida/
 ## 📝 Notas Importantes
 
 1. **Ordem de inicialização importa**:
-   - Sempre suba a infraestrutura primeiro (docker-compose)
+  - Sempre suba a infraestrutura primeiro (`./start-all.sh`)
    - Aguarde ~30 segundos antes de subir os microserviços
    - Suba os microserviços na ordem: usuarios → produtos-write → produtos-read → vendas
    - Por último, suba o frontend
