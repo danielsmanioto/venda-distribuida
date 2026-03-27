@@ -21,7 +21,7 @@
     <properties>
         <java.version>25</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
-        <jacoco.version>0.8.12</jacoco.version>
+        <jacoco.version>0.8.13</jacoco.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
         <checkstyle-plugin.version>3.5.0</checkstyle-plugin.version>

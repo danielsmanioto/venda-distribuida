@@ -90,6 +90,36 @@ Alternativa (manual):
 docker-compose up -d
 ```
 
+### 3️⃣.1 Subir **todos os Java** via Docker (de uma vez)
+
+Se quiser subir os 4 microserviços Java em containers (sem executar `mvn spring-boot:run` em terminais separados):
+
+```bash
+# 1) Gerar os jars (necessário para o build das imagens atuais)
+cd usuarios && mvn clean package -DskipTests && cd ..
+cd produtos-write-service && mvn clean package -DskipTests && cd ..
+cd produtos-read-service && mvn clean package -DskipTests && cd ..
+cd vendas && mvn clean package -DskipTests && cd ..
+
+# 2) Subir apps Java dockerizadas (profile apps)
+docker-compose --profile apps up -d --build
+
+# 3) Conferir status
+docker-compose ps
+```
+
+Após isso, os serviços ficam disponíveis em:
+- http://localhost:8080 (usuarios)
+- http://localhost:8081 (produtos-write)
+- http://localhost:8082 (produtos-read)
+- http://localhost:8083 (vendas)
+
+Para parar apenas os Java dockerizados:
+
+```bash
+docker-compose --profile apps stop usuarios-service produtos-write-service produtos-read-service vendas-service
+```
+
 **Serviços disponíveis:**
 - Frontend (após `npm run dev`): http://localhost:5173
 - PostgreSQL usuarios: localhost:5434
@@ -341,6 +371,8 @@ docker-compose down
 # Parar e remover volumes (CUIDADO: apaga dados)
 docker-compose down -v
 ```
+
+Se estiver usando os Java dockerizados (profile `apps`), o `docker-compose down` também para esses serviços.
 
 ## 🚚 Deploy (produção)
 
