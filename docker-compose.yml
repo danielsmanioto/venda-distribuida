@@ -328,6 +328,106 @@ services:
     networks:
       - ecommerce-network
 
+  # ========================================
+  # APLICAÇÃO - MICROSSERVIÇOS JAVA (PERFIL)
+  # ========================================
+
+  usuarios-service:
+    profiles: ["apps"]
+    build:
+      context: ./usuarios
+      dockerfile: Dockerfile
+    container_name: usuarios-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-usuarios:5432/usuarios
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:8080
+    depends_on:
+      postgres-usuarios:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  produtos-write-service:
+    profiles: ["apps"]
+    build:
+      context: ./produtos-write-service
+      dockerfile: Dockerfile
+    container_name: produtos-write-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-produtos-master:5432/produtos
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin123
+    depends_on:
+      postgres-produtos-master:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  produtos-read-service:
+    profiles: ["apps"]
+    build:
+      context: ./produtos-read-service
+      dockerfile: Dockerfile
+    container_name: produtos-read-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-produtos-replica:5432/produtos
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: redis123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin123
+    depends_on:
+      postgres-produtos-replica:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  vendas-service:
+    profiles: ["apps"]
+    build:
+      context: ./vendas
+      dockerfile: Dockerfile
+    container_name: vendas-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-vendas:5432/vendas
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      SERVICES_PRODUTOS_URL: http://produtos-read-service:8082
+    depends_on:
+      postgres-vendas:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      produtos-read-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+
 # ========================================
 # VOLUMES
 # ========================================

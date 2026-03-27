@@ -33,7 +33,7 @@ Guia completo para executar todos os serviços do sistema de venda distribuída.
 
 ### ✅ Frontend
 
-- **frontend** - Porta 3000
+- **frontend** - Porta 5173
   - React + Vite
   - Login de usuários
   - Listagem de produtos
@@ -75,8 +75,8 @@ cd /Users/danielsmanioto/Documents/projects/projets_senior/venda-distribuida
 ### 3️⃣ Subir Infraestrutura
 
 ```bash
-# Subir todos os containers de infraestrutura
-docker-compose up -d
+# Recomendado: usar script da raiz (sobe infra e valida serviços)
+./start-all.sh
 
 # Verificar se todos os containers estão rodando
 docker-compose ps
@@ -84,7 +84,44 @@ docker-compose ps
 # Aguardar ~30 segundos para inicialização completa
 ```
 
+Alternativa (manual):
+
+```bash
+docker-compose up -d
+```
+
+### 3️⃣.1 Subir **todos os Java** via Docker (de uma vez)
+
+Se quiser subir os 4 microserviços Java em containers (sem executar `mvn spring-boot:run` em terminais separados):
+
+```bash
+# 1) Gerar os jars (necessário para o build das imagens atuais)
+cd usuarios && mvn clean package -DskipTests && cd ..
+cd produtos-write-service && mvn clean package -DskipTests && cd ..
+cd produtos-read-service && mvn clean package -DskipTests && cd ..
+cd vendas && mvn clean package -DskipTests && cd ..
+
+# 2) Subir apps Java dockerizadas (profile apps)
+docker-compose --profile apps up -d --build
+
+# 3) Conferir status
+docker-compose ps
+```
+
+Após isso, os serviços ficam disponíveis em:
+- http://localhost:8080 (usuarios)
+- http://localhost:8081 (produtos-write)
+- http://localhost:8082 (produtos-read)
+- http://localhost:8083 (vendas)
+
+Para parar apenas os Java dockerizados:
+
+```bash
+docker-compose --profile apps stop usuarios-service produtos-write-service produtos-read-service vendas-service
+```
+
 **Serviços disponíveis:**
+- Frontend (após `npm run dev`): http://localhost:5173
 - PostgreSQL usuarios: localhost:5434
 - PostgreSQL produtos-master: localhost:5435
 - PostgreSQL produtos-replica: localhost:5437
@@ -94,7 +131,7 @@ docker-compose ps
 - Kafka: localhost:9092
 - Zookeeper: localhost:2181
 - Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (admin/admin)
+- Grafana: http://localhost:3000 (admin/admin123)
 - Jaeger: http://localhost:16686
 
 ### 4️⃣ Executar Microserviços (Backend)
@@ -102,7 +139,6 @@ docker-compose ps
 #### Terminal 1 - usuarios-service
 ```bash
 cd usuarios
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8080
@@ -110,7 +146,6 @@ mvn spring-boot:run
 #### Terminal 2 - produtos-write-service
 ```bash
 cd produtos-write-service
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8081
@@ -118,7 +153,6 @@ mvn spring-boot:run
 #### Terminal 3 - produtos-read-service
 ```bash
 cd produtos-read-service
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8082
@@ -126,10 +160,11 @@ mvn spring-boot:run
 #### Terminal 4 - vendas-service
 ```bash
 cd vendas
-mvn clean install -DskipTests
 mvn spring-boot:run
 ```
 ✅ Disponível em: http://localhost:8083
+
+> Opcional (quando quiser validar build): `mvn clean install -DskipTests`
 
 ### 5️⃣ Executar Frontend
 
@@ -139,7 +174,7 @@ cd frontend
 npm install
 npm run dev
 ```
-✅ Disponível em: http://localhost:3000
+✅ Disponível em: http://localhost:5173
 
 ---
 
@@ -194,7 +229,7 @@ curl -X POST http://localhost:8081/api/produtos \
 curl http://localhost:8082/api/produtos
 
 # Via Frontend
-# Acesse http://localhost:3000
+# Acesse http://localhost:5173
 # Faça login
 # Produtos aparecerão automaticamente
 ```
@@ -289,7 +324,7 @@ GET produtos::1
 
 ### Frontend (Usuário Final)
 
-1. **Acesse** http://localhost:3000
+1. **Acesse** http://localhost:5173
 2. **Login** com credenciais criadas
 3. **Visualize** catálogo de produtos
 4. Produtos são carregados do **produtos-read-service** (cache Redis)
@@ -327,12 +362,26 @@ GET produtos::1
 # Parar microserviços
 # Ctrl+C em cada terminal
 
-# Parar infraestrutura
+# Recomendado: usar script da raiz
+./stop-all.sh
+
+# Alternativa manual
 docker-compose down
 
 # Parar e remover volumes (CUIDADO: apaga dados)
 docker-compose down -v
 ```
+
+Se estiver usando os Java dockerizados (profile `apps`), o `docker-compose down` também para esses serviços.
+
+## 🚚 Deploy (produção)
+
+```bash
+# Script de deploy com docker-compose.prod.yml
+./deploy.sh
+```
+
+> Observação: `deploy.sh` é para ambiente de produção/homologação. Para desenvolvimento local, use `./start-all.sh` e `./stop-all.sh`.
 
 ---
 
@@ -404,11 +453,14 @@ venda-distribuida/
 ├── produtos-write-service/      # CQRS Write (8081)
 ├── produtos-read-service/       # CQRS Read (8082)
 ├── vendas/                      # Serviço de vendas (8083)
-├── frontend/                    # React Frontend (3000)
+├── frontend/                    # React Frontend (5173)
 ├── docker-compose.yml           # Infraestrutura
+├── start-all.sh                 # Sobe infraestrutura local
+├── stop-all.sh                  # Para infraestrutura local
+├── deploy.sh                    # Deploy de produção
 ├── README.md                    # Documentação principal
 ├── PRODUTOS-README.md           # Documentação CQRS
-└── GUIA-EXECUCAO.md            # Este arquivo
+└── docs/guias/GUIA-EXECUCAO.md  # Este arquivo
 ```
 
 ---
@@ -443,13 +495,13 @@ venda-distribuida/
 ## 📝 Notas Importantes
 
 1. **Ordem de inicialização importa**:
-   - Sempre suba a infraestrutura primeiro (docker-compose)
+  - Sempre suba a infraestrutura primeiro (`./start-all.sh`)
    - Aguarde ~30 segundos antes de subir os microserviços
    - Suba os microserviços na ordem: usuarios → produtos-write → produtos-read → vendas
    - Por último, suba o frontend
 
 2. **CORS**:
-   - Todos os backends têm CORS habilitado para `http://localhost:3000`
+  - Todos os backends têm CORS habilitado para `http://localhost:5173`
    - Em produção, configure CORS adequadamente
 
 3. **Segurança**:

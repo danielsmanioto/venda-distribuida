@@ -12,6 +12,8 @@ Documentação consolidada do projeto (exceto os `README.md`, que permanecem em 
   - [Setup Checklist CI/CD](cicd/CI-CD-SETUP-CHECKLIST.md)
 - [Guias](guias/GUIA-EXECUCAO.md)
   - [Infraestrutura](guias/INFRAESTRUTURA.md)
+  - [Acessos e Credenciais](guias/ACESSOS.md)
+  - [Guia Prático de Observabilidade](guias/OBSERVABILIDADE.md)
 - [Desenvolvimento](dev/VS-CODE-PLUGINS-AWS.md)
 - [SDD](sdd/features/control-estoque.md)
 - [Validações](validacoes/copilot-review-prompt.md)
